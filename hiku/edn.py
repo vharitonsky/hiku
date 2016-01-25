@@ -7,11 +7,10 @@ from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
 from itertools import chain
-from collections import namedtuple
 from json.encoder import encode_basestring, encode_basestring_ascii
 
 
-from .compat import texttype
+from .compat import text_type
 
 
 class ImmutableDict(dict):
@@ -30,27 +29,27 @@ class ImmutableDict(dict):
     clear = pop = popitem = setdefault = update = _immutable
 
 
-class Symbol(texttype):
+class Symbol(text_type):
 
     def __repr__(self):
         return self
 
     def __eq__(self, other):
         return isinstance(other, type(self)) and \
-               super(Symbol, self).__eq__(other)
+            super(Symbol, self).__eq__(other)
 
     def __hash__(self):
         return super(Symbol, self).__hash__()
 
 
-class Keyword(texttype):
+class Keyword(text_type):
 
     def __repr__(self):
         return ':{}'.format(self)
 
     def __eq__(self, other):
         return isinstance(other, type(self)) and \
-               super(Keyword, self).__eq__(other)
+            super(Keyword, self).__eq__(other)
 
     def __hash__(self):
         return super(Keyword, self).__hash__()
@@ -145,7 +144,7 @@ _END_CHARS = {
 def tag_handler(tag_name, tag_handlers):
     while True:
         c = (yield)
-        if c in STOP_CHARS+'{"[(\\#':
+        if c in STOP_CHARS + '{"[(\\#':
             break
         tag_name += c
     elements = []
@@ -253,10 +252,10 @@ def parser(target, tag_handlers, stop=None):
             handler = number_handler(c)
         elif c in '-.':
             c2 = (yield)
-            if c2.isdigit():    # .5 should be an error
-                handler = number_handler(c+c2)
+            if c2.isdigit():  # .5 should be an error
+                handler = number_handler(c + c2)
             else:
-                handler = symbol_handler(c+c2)
+                handler = symbol_handler(c + c2)
         elif c.isalpha() or c == ':':
             handler = symbol_handler(c)
         elif c in '[({#':
@@ -289,9 +288,9 @@ def parser(target, tag_handlers, stop=None):
 
 
 def loads(s, tag_handlers=None):
-    if not isinstance(s, texttype):
+    if not isinstance(s, text_type):
         raise TypeError('The EDN value must be {!r}, not {!r}'
-                        .format(texttype.__name__, type(s).__name__))
+                        .format(text_type.__name__, type(s).__name__))
     l = []
     target = parser(appender(l), dict(tag_handlers or (), **TAG_HANDLERS))
     for c in s:
@@ -327,17 +326,17 @@ def _iterencode(obj, default, encoder):
     elif obj is False:
         yield 'false'
     elif isinstance(obj, int):
-        yield texttype(int(obj))
+        yield text_type(int(obj))
     elif isinstance(obj, float):
         # FIXME: proper float encoding
-        yield texttype(float(obj))
+        yield text_type(float(obj))
     elif isinstance(obj, Decimal):
         yield '{}M'.format(obj)
     elif isinstance(obj, Keyword):
         yield ':{}'.format(obj)
     elif isinstance(obj, Symbol):
         yield obj
-    elif isinstance(obj, texttype):
+    elif isinstance(obj, text_type):
         yield encoder(obj)
     elif isinstance(obj, (list, List)):
         # NOTE: `(list, List)` check should be before `(tuple, Tuple)`,

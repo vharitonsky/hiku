@@ -12,7 +12,7 @@ from hiku.graph import Edge, Link
 from hiku.engine import Engine
 from hiku.sources.sql import db_fields, db_link
 from hiku.readers.simple import read
-from hiku.executors.thread import ThreadExecutor
+from hiku.executors.threads import ThreadsExecutor
 
 from .base import TestCase
 
@@ -111,14 +111,14 @@ class TestSourceSQL(TestCase):
             {'name': 'foo2', 'count': 10, 'bar_id': self.bar_ids[1]},
             {'name': 'foo3', 'count': 15, 'bar_id': self.bar_ids[2]},
         ]))
-        self.engine = Engine(ThreadExecutor(thread_pool))
+        self.engine = Engine(ThreadsExecutor(thread_pool))
 
     def tearDown(self):
         session.remove()
 
     def assertExecute(self, src, result):
-        store = self.engine.execute(ENV, read(src))
-        self.assertResult(store, result)
+        result = self.engine.execute(ENV, read(src))
+        self.assertResult(result, result)
 
     def testManyToOne(self):
         self.assertExecute(
